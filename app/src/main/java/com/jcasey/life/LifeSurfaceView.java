@@ -1,4 +1,4 @@
-package com.jcasey;
+package com.jcasey.life;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -14,18 +14,18 @@ import java.util.Random;
 
 public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHolder.Callback, View.OnTouchListener
 {
-    public static final int SCREEN_DIAGONAL_METRES = 80;
+    public static final int SCREEN_DIAGONAL_METRES = 100;
 
-    final Paint paint = new Paint();
-    boolean running = false;
+    private final Paint paint = new Paint();
+    private boolean running = false;
 
-    Thread animation;
-    WorldSimulation world;
+    private Thread animation;
+    private WorldSimulation world;
 
     private float width;
     private float height;
 
-    float scale;
+    private float scale;
 
     public LifeSurfaceView(Context context) {
         super(context);
@@ -44,17 +44,19 @@ public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 
         scale = SCREEN_DIAGONAL_METRES / hyp;
 
-        float scaledWidth = (float) Math.floor(width * scale);
-        float scaledHeight = (float)Math.floor(height * scale);
+        int scaledWidth = (int) Math.floor(width * scale);
+        int scaledHeight = (int)Math.floor(height * scale);
 
-        world = new WorldSimulation((int)(scaledWidth), (int)(scaledHeight), width, height);
+        world = new WorldSimulation(scaledWidth, scaledHeight, width, height);
 
         Random random = new Random();
 
-        for(int i =0 ;i<800; i++)
+        int generate = (int)(width * height*0.001f);
+
+        for(int i =0 ;i<generate; i++)
         {
-            int x = random.nextInt((int)scaledWidth)+1;
-            int y = random.nextInt((int)scaledHeight)+1;
+            int x = random.nextInt(scaledWidth)+1;
+            int y = random.nextInt(scaledHeight)+1;
 
             world.setCell(x,y,true);
         }
@@ -142,13 +144,27 @@ public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHol
                     world.timeStep(canvas, paint);
                     holder.unlockCanvasAndPost(canvas);
                 }
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
-        world.setCell((int)(motionEvent.getX()*scale),(int)(motionEvent.getY()*scale),true);
-        return true;
+        if(view.equals(this)) {
+            int x = (int) (motionEvent.getX() * scale) + 1;
+            int y = (int) (motionEvent.getY() * scale) + 1;
+
+            x = Math.min(x,world.width);
+            y = Math.min(y,world.height);
+
+            world.setCell(x, y, true);
+            return true;
+        }
+        return false;
     }
 }

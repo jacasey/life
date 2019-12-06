@@ -1,11 +1,13 @@
-package com.jcasey;
+package com.jcasey.life;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
+import java.util.Random;
+
 /**
- * Created by jcasey on 23/02/2015.
+ * Created by jcasey on 23/02/2019.
  */
 public class WorldSimulation {
 
@@ -26,7 +28,6 @@ public class WorldSimulation {
         this.height = height;
 
         next = new int[width+2][height+2];
-
         current = new int[width+2][height+2];
 
         cellWidth = (w / this.width);
@@ -41,9 +42,9 @@ public class WorldSimulation {
             System.arraycopy(next[i], 0, current[i], 0, next[0].length);
         }
 
-        for(int i = 1; i < this.width-1; i++)
+        for(int i = 1; i < this.width+1; i++)
         {
-            for(int j = 1; j < this.height-1; j++)
+            for(int j = 1; j < this.height+1; j++)
             {
                 float left = (i * cellWidth);
                 float top = (j * cellHeight);
@@ -57,7 +58,7 @@ public class WorldSimulation {
                 if(status == 255) {
                     paint.setColor(Color.rgb(0, 255, 0));
 
-                    canvas.drawRect(left,top,right,bottom,paint);
+                    canvas.drawRect(left-cellWidth,top-cellHeight,right,bottom,paint);
 
                     if (neighbours < 2) {
                         next[i][j]=0;
@@ -69,8 +70,8 @@ public class WorldSimulation {
                 }
                 else if(status!=255)
                 {
-                    paint.setColor(Color.rgb(0, 0, 0));
-                    canvas.drawRect(left,top,right,bottom,paint);
+                    paint.setColor(Color.rgb(0, status--, 0));
+                    canvas.drawRect(left-cellWidth,top-cellHeight,right,bottom,paint);
 
                     if(neighbours == 3)
                     {
