@@ -162,6 +162,9 @@ public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHol
             x = Math.min(x,world.width);
             y = Math.min(y,world.height);
 
+            x = Math.max(0, x);
+            y = Math.max(0, y);
+
             world.setCell(x, y, true);
             return true;
         }
