@@ -4,8 +4,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
-import java.util.Random;
-
 /**
  * Created by jcasey on 23/02/2019.
  */
@@ -13,8 +11,8 @@ public class WorldSimulation {
 
     long generation = 0;
 
-    int[][]  next = null;
-    int[][] current = null;
+    boolean[]  next = null;
+    boolean[] current = null;
 
     float cellWidth;
     float cellHeight;
@@ -27,8 +25,8 @@ public class WorldSimulation {
         this.width = width;
         this.height = height;
 
-        next = new int[width+2][height+2];
-        current = new int[width+2][height+2];
+        next = new boolean[(width+2)*(height+2)];
+        current = new boolean[(width+2)*(height+2)];
 
         cellWidth = (w / this.width);
         cellHeight = (h / this.height);
@@ -38,9 +36,7 @@ public class WorldSimulation {
     {
         generation ++;
 
-        for (int i = 0; i < next.length; i++) {
-            System.arraycopy(next[i], 0, current[i], 0, next[0].length);
-        }
+        System.arraycopy(next, 0, current, 0, next.length);
 
         for(int i = 1; i < this.width+1; i++)
         {
@@ -51,45 +47,54 @@ public class WorldSimulation {
                 float right = (left + cellWidth);
                 float bottom = (top + cellHeight);
 
-                int status = current[i][j];
+                boolean status = getCell(i, j);
 
                 int neighbours = livingNeighbours(i, j);
 
-                if(status == 255) {
-                    paint.setColor(Color.rgb(0, 255, 0));
+                float variance = (neighbours / 5.0f) * 255.0f;
 
-                    canvas.drawRect(left-cellWidth,top-cellHeight,right,bottom,paint);
+                int colour = (int) variance;
+
+                if(status) {
+                    paint.setColor(Color.rgb(0, colour, 0));
 
                     if (neighbours < 2) {
-                        next[i][j]=0;
+                        setCell(i,j,false);
                     }
                     else if(neighbours >3)
                     {
-                        next[i][j]=0;
+                        setCell(i,j,false);
                     }
                 }
-                else if(status!=255)
+                else
                 {
-                    paint.setColor(Color.rgb(0, status--, 0));
-                    canvas.drawRect(left-cellWidth,top-cellHeight,right,bottom,paint);
-
+                    paint.setColor(Color.rgb(0, 0, 0));
                     if(neighbours == 3)
                     {
-                        next[i][j] =  255;
+                        setCell(i,j,true);
                     }
                 }
+
+                canvas.drawRect(left - cellWidth, top - cellHeight, right, bottom, paint);
             }
         }
     }
 
-    public int livingNeighbours(int i, int j) {
+    private boolean getCell(int row, int col) {
+
+        int idx = (row * (height +2 )) + col ;
+
+        return current[idx];
+    }
+
+    private int livingNeighbours(int row, int col) {
         int alive = 0 ;
 
-        for(int kernelRow = i -1; kernelRow <= i+1; kernelRow ++)
+        for(int i = row -1; i <= row+1; i ++)
         {
-            for(int kernelCol = j -1; kernelCol <= j+1; kernelCol ++)
+            for(int j = col -1; j <= col+1; j ++)
             {
-                if(current[kernelRow][kernelCol]== 255 && !(kernelRow == i && kernelCol == j))
+                if(getCell(i, j) && !(i == row && j == col))
                 {
                     alive ++;
                 }
@@ -98,9 +103,11 @@ public class WorldSimulation {
         return alive;
     }
 
-    public void setCell(int i, int j, boolean alive)
+    public void setCell(int row, int col, boolean alive)
     {
-        next[i][j] =  255;
+        int idx = (row * (height +2 )) + col ;
+
+        next[idx] =  alive;
     }
 
 }
