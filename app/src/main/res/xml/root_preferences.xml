@@ -1,0 +1,21 @@
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="life">
+    <CheckBoxPreference
+        android:key="transparency"
+        android:title="Transparency"/>
+    <CheckBoxPreference
+        android:key="grid"
+        android:title="Grid Lines"
+        android:defaultValue="false"/>
+    <SeekBarPreference
+        android:defaultValue="10"
+        android:key="alive"
+        android:max="100"
+        android:title="Random live cells" />
+    <SeekBarPreference
+        android:defaultValue="80"
+        android:key="size"
+        android:max="80"
+        android:title="Cell Size" />
+</PreferenceScreen>

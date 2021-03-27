@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="Restart" android:id="@+id/restart"/>
+    <item android:title="Settings" android:id="@+id/settings"/>
+    <item android:title="Pause" android:id="@+id/pause"/>
+    <item android:title="Play" android:id="@+id/play"/>
+<!--    <item android:title="About" android:id="@+id/about"/>-->
+</menu>
