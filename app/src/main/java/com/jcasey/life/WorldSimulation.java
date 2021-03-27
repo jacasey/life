@@ -9,6 +9,7 @@ import android.graphics.Paint;
  */
 public class WorldSimulation {
 
+    private final boolean transparency;
     long generation = 0;
 
     boolean[]  next = null;
@@ -17,30 +18,37 @@ public class WorldSimulation {
     float cellWidth;
     float cellHeight;
 
-    int width;
-    int height;
+    int arrayWidth;
+    int arrayHeight;
 
-    public WorldSimulation(int width, int height, float w, float h)
+    private boolean grid;
+
+    private float screenWidth;
+    private float screenHeight;
+
+    public WorldSimulation(int arrayWidth, int arrayHeight, float screenWidth, float screenHeight, boolean grid, boolean transparency)
     {
-        this.width = width;
-        this.height = height;
+        this.transparency = transparency;
 
-        next = new boolean[(width+2)*(height+2)];
-        current = new boolean[(width+2)*(height+2)];
+        this.screenWidth = screenWidth;
+        this.screenHeight = screenHeight;
 
-        cellWidth = (w / this.width);
-        cellHeight = (h / this.height);
+        this.grid = grid;
+
+        this.arrayWidth = arrayWidth;
+        this.arrayHeight = arrayHeight;
+
+        next = new boolean[(arrayWidth +2)*(arrayHeight +2)];
+        current = new boolean[(arrayWidth +2)*(arrayHeight +2)];
+
+        cellWidth = (screenWidth / this.arrayWidth);
+        cellHeight = (screenHeight / this.arrayHeight);
     }
 
-    public void timeStep(Canvas canvas, Paint paint)
-    {
-        generation ++;
-
-        System.arraycopy(next, 0, current, 0, next.length);
-
-        for(int i = 1; i < this.width+1; i++)
+    public void paint(Canvas canvas, Paint paint) {
+        for(int i = 1; i < this.arrayWidth +1; i++)
         {
-            for(int j = 1; j < this.height+1; j++)
+            for(int j = 1; j < this.arrayHeight +1; j++)
             {
                 float left = (i * cellWidth);
                 float top = (j * cellHeight);
@@ -56,8 +64,46 @@ public class WorldSimulation {
                 int colour = (int) variance;
 
                 if(status) {
-                    paint.setColor(Color.rgb(0, colour, 0));
+                    if(transparency) {
+                        paint.setColor(Color.rgb(0, colour, 0));
+                    }
+                    else {
+                        paint.setColor(Color.GREEN);
+                    }
+                }
+                else
+                {
+                    paint.setColor(Color.BLACK);
+                }
+                canvas.drawRect(left - cellWidth, top - cellHeight, right, bottom, paint);
+            }
+        }
+        if(grid) {
+            paint.setColor(Color.WHITE);
+            for (float i = 0; i < screenHeight; i += cellHeight) {
+                canvas.drawLine(0, i, screenWidth, i, paint);
+            }
+            for (float i = 0; i < screenWidth; i += cellWidth) {
+                canvas.drawLine(i, 0, i, screenHeight, paint);
+            }
+        }
+    }
 
+    public void timeStep()
+    {
+        generation ++;
+
+        System.arraycopy(next, 0, current, 0, next.length);
+
+        for(int i = 1; i < this.arrayWidth +1; i++)
+        {
+            for(int j = 1; j < this.arrayHeight +1; j++)
+            {
+                boolean status = getCell(i, j);
+
+                int neighbours = livingNeighbours(i, j);
+
+                if(status) {
                     if (neighbours < 2) {
                         setCell(i,j,false);
                     }
@@ -68,21 +114,17 @@ public class WorldSimulation {
                 }
                 else
                 {
-                    paint.setColor(Color.rgb(0, 0, 0));
-                    if(neighbours == 3)
-                    {
+                    if(neighbours == 3) {
                         setCell(i,j,true);
                     }
                 }
-
-                canvas.drawRect(left - cellWidth, top - cellHeight, right, bottom, paint);
             }
         }
     }
 
-    private boolean getCell(int row, int col) {
+    public boolean getCell(int row, int col) {
 
-        int idx = (row * (height +2 )) + col ;
+        int idx = (row * (arrayHeight +2 )) + col ;
 
         return current[idx];
     }
@@ -105,9 +147,16 @@ public class WorldSimulation {
 
     public void setCell(int row, int col, boolean alive)
     {
-        int idx = (row * (height +2 )) + col ;
-
+        int idx = (row * (arrayHeight +2 )) + col ;
         next[idx] =  alive;
+    }
+
+    public void setCurrentCell(int row, int col, boolean alive)
+    {
+        int idx = (row * (arrayHeight +2 )) + col ;
+
+        current[idx] = alive;
+
     }
 
 }

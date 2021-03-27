@@ -1,10 +1,12 @@
 package com.jcasey.life;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.preference.PreferenceManager;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -12,9 +14,12 @@ import android.view.View;
 
 import java.util.Random;
 
-public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHolder.Callback, View.OnTouchListener
-{
-    public static final int SCREEN_DIAGONAL_METRES = 100;
+import static android.view.MotionEvent.ACTION_DOWN;
+import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_UP;
+
+public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHolder.Callback, View.OnTouchListener {
+    private int SCREEN_DIAGONAL_METRES = 100;
 
     private final Paint paint = new Paint();
     private boolean running = false;
@@ -27,9 +32,22 @@ public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 
     private float scale;
 
+    private boolean transparency;
+    private boolean grid;
+    private int randomLiveCells;
+    private boolean mouseDown = false;
+    private boolean pause;
+
     public LifeSurfaceView(Context context) {
         super(context);
         getHolder().addCallback(this);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        randomLiveCells = preferences.getInt("alive",10);
+        transparency = preferences.getBoolean("transparency",true);
+        grid = preferences.getBoolean("grid",false);
+        SCREEN_DIAGONAL_METRES = preferences.getInt("size",100)+20;
     }
 
     public void setup(final SurfaceHolder holder) {
@@ -47,18 +65,22 @@ public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHol
         int scaledWidth = (int) Math.floor(width * scale);
         int scaledHeight = (int)Math.floor(height * scale);
 
-        world = new WorldSimulation(scaledWidth, scaledHeight, width, height);
+        world = new WorldSimulation(scaledWidth, scaledHeight, width, height, grid, transparency);
 
         Random random = new Random();
 
-        int generate = (int)(width * height*0.001f);
+        int generate = (int)(scaledWidth * scaledHeight * (randomLiveCells / 100.0f));
 
-        for(int i =0 ;i<generate; i++)
-        {
+        for(int i =0 ;i<generate; i++){
             int x = random.nextInt(scaledWidth)+1;
             int y = random.nextInt(scaledHeight)+1;
 
-            world.setCell(x,y,true);
+            if(!world.getCell(x,y)) {
+                world.setCell(x, y, true);
+            }
+            else {
+                i--;
+            }
         }
 
 //
@@ -128,7 +150,6 @@ public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 
     @Override
     public void run() {
-
         paint.setColor(Color.GREEN);
 
         while(running)
@@ -136,16 +157,19 @@ public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHol
             Canvas canvas;
 
             SurfaceHolder holder = getHolder();
-            synchronized(holder)
-            {
+            synchronized (holder) {
                 canvas = holder.lockCanvas();
 
-                if(canvas != null) {
-                    world.timeStep(canvas, paint);
+                if (canvas != null) {
+                    if (!(mouseDown || pause)) {
+                        world.timeStep();
+                    }
+                    world.paint(canvas, paint);
+
                     holder.unlockCanvasAndPost(canvas);
                 }
                 try {
-                    Thread.sleep(5);
+                    Thread.sleep(33);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -155,19 +179,37 @@ public class LifeSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
-        if(view.equals(this)) {
-            int x = (int) (motionEvent.getX() * scale) + 1;
-            int y = (int) (motionEvent.getY() * scale) + 1;
+        if(motionEvent.getAction()==ACTION_DOWN || motionEvent.getAction()==ACTION_MOVE) {
+            mouseDown = true;
 
-            x = Math.min(x,world.width);
-            y = Math.min(y,world.height);
+            if(view.equals(this)) {
+                int x = (int) (motionEvent.getX() * scale) + 1;
+                int y = (int) (motionEvent.getY() * scale) + 1;
 
-            x = Math.max(0, x);
-            y = Math.max(0, y);
+                x = Math.min(x,world.arrayWidth);
+                y = Math.min(y,world.arrayHeight);
 
-            world.setCell(x, y, true);
-            return true;
+                x = Math.max(0, x);
+                y = Math.max(0, y);
+
+                world.setCurrentCell(x, y, true);
+                world.setCell(x, y, true);
+
+                return true;
+            }
         }
+        else if(motionEvent.getAction()==ACTION_UP) {
+            mouseDown = false;
+        }
+
         return false;
+    }
+
+    public void pause() {
+        pause = true;
+    }
+
+    public void play() {
+        pause = false;
     }
 }

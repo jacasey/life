@@ -4,8 +4,15 @@
 
     <application
         android:icon="@drawable/life"
-        android:label="Conway's Game of Life">
+        android:label="Conway&apos;s Game of Life"
+        android:title="">
 
+        <activity
+            android:name=".SettingsActivity"
+            android:label="Settings"></activity>
+        <activity
+            android:name=".AboutActivity"
+            android:label="About"></activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
